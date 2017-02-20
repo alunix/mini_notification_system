@@ -7,6 +7,9 @@ Links:
 ------
 
 /login
+
 /signup
+
 /profile
+
 /notifications
