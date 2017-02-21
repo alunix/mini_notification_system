@@ -1,6 +1,8 @@
 A mini notification system based on Codeigniter and MongoDB.
 
-Attempting to make it work with Tornado, for persistent connection.
+Whenever a notification needs to be sent out, it is pushed to the client using Tornado.
+
+Implements persistent connection using long polling and Tornado.
 
 
 Links:
@@ -19,7 +21,7 @@ Links:
 MongoDB Architecture:
 ---------------------
 
-There are 4 collections:
+There are 5 collections:
 
 - users
   _id
@@ -54,3 +56,8 @@ There are 4 collections:
   is_fresh
   created_on
 
+- push_notifications
+  _id
+  users
+  is_processed
+  created_on
