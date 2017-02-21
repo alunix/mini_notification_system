@@ -88,9 +88,10 @@ class User extends CI_Controller {
 	}
 
 	public function add_comment(){
-		if($this->input->post()){
+		$logged_in_user = $this->session->user_id;
+
+		if($this->input->post() && $logged_in_user){
 			$post_id = $this->input->post("pid");
-			$logged_in_user = $this->session->user_id;
 			try{
 				$post_data = $this->user_model->get_post_data($post_id);
 			} catch(Exception $e){
@@ -108,18 +109,19 @@ class User extends CI_Controller {
 
 			$to_be_notified_users = $this->user_model->get_users_related_to_post($post_id);
 
-			$user_notifications = array();
+			$users_for_notification = array();
 			if($logged_in_user != (string)$post_data[0]['owner_id']){
-				$user_notifications[] = (string)$post_data[0]['owner_id'];
+				$users_for_notification[] = (string)$post_data[0]['owner_id'];
 			}
 
 			foreach ($to_be_notified_users as $key => $value) {
-				if(!in_array((string)$value["by_user_id"], $user_notifications) && $logged_in_user != $value["by_user_id"]) {
-					$user_notifications[] = (string) $value["by_user_id"];
+				if(!in_array((string)$value["by_user_id"], $users_for_notification) && $logged_in_user != $value["by_user_id"]) {
+					$users_for_notification[] = (string) $value["by_user_id"];
 				}
 			}
 
-			$this->insert_notifications_for_users($post_id, $user_notifications, new mongoid($this->session->user_id));
+			$this->insert_notifications_for_users($post_id, $users_for_notification, new mongoid($this->session->user_id));
+			$this->push_notification_to_users($users_for_notification);
 
 			redirect("posts/".$post_id);
 		}else{
@@ -127,8 +129,8 @@ class User extends CI_Controller {
 		}
 	}
 
-	private function insert_notifications_for_users($post_id, $user_notifications, $activity_by){
-		foreach ($user_notifications as $value) {
+	private function insert_notifications_for_users($post_id, $users_for_notification, $activity_by){
+		foreach ($users_for_notification as $value) {
 			$notification = array(
 				"to_user_id"=> new mongoid($value),
 				"from_user_id"=> $activity_by,
@@ -141,6 +143,40 @@ class User extends CI_Controller {
 			$this->user_model->insert_notification($notification);
 		}
 	}
+
+	private function push_notification_to_users($users){
+		$push = array(
+			"users"=> $users,
+			"is_processed"=> False,
+			"created_on"=> strtotime("now")
+			);
+		$insert_status = $this->mongo_db->insert("push_notifications", $push);
+
+		//pinging Tornado that new notifications are available to crunch
+		if($insert_status){
+			$ch = curl_init('http://139.59.38.45:8080/mini_notif_server/push?auth=yes_me&push_id='.(string)$insert_status);
+			curl_setopt($ch, CURLOPT_POST, 0);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+			$result = curl_exec($ch);
+			curl_close($ch);
+		}
+	}
+
+	// private function push_dispatcher_for_notifications($user_id){
+	// 	if($user_id){
+	// 		$ch = curl_init('http://139.59.38.45:8080/mini_notif_server/push?auth=yes_me&key='.$user_id);
+	// 		curl_setopt($ch, CURLOPT_POST, 0);
+	// 		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($response));
+	// 		curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+	// 		$result = curl_exec($ch);
+	// 		curl_close($ch);
+
+	// 		if($result)
+	// 			return True;
+	// 		else
+	// 			return False;
+	// 	}else return False;
+	// }
 
 	public function create_post(){
 		$post_text = $this->input->post("post_text");

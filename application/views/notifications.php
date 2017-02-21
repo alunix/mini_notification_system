@@ -26,19 +26,10 @@
 			}
 
 		</style>
-
-		<?php
-		//header('Access-Control-Allow-Origin: *');
-
-		header("Access-Control-Allow-Origin: http://139.59.38.45");
-		header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
-		header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token');
-		?>
-
 	</head>
 
 	<body>
-		<h1 style="margin-bottom: 100px;">Notifications</h1>
+		<h1 style="margin-bottom: 100px;">Unread Notifications</h1>
 
 		<div id="notification_details">
 			<?php
@@ -54,39 +45,33 @@
 
 		<script type="text/javascript">
 			$(document).ready(function() {
-				function poll() {
-					// var args = []
-					// args.key = <?php echo $this->session->current_key; ?>;
-				    // var args = form.formToDict();
+				var errorSleepTime = 2000;
 
-				    $.postJSON("http://139.59.38.45:8080/mini_notif_server", function(response) {
-				        alert("Got it!");
-				        console.log(response);
-				    });
-				    setTimeout(function() {
-			        	poll();
-			        }, 10000);
-				};
-
-				jQuery.postJSON = function(url, callback) {
+				function long_polling() {
 				    $.ajax({
-				    	url: url,
+				    	url: "http://139.59.38.45:8080/mini_notif_server",
 				    	data: {key: "<?php echo $this->session->current_key; ?>"},
 				    	dataType: "json",
 				    	type: "GET",
-				    	// crossDomain: true,
 				        success: function(response) {
-				        	// if (callback) callback(eval("(" + response + ")"));
 				        	console.log(response);
 				        	console.log(response.notification);
 
 				        	$("#notification_details").append(response.notification);
+				        	long_polling();
+				        	// resets the value in case things get normal after a brief issue
+				        	errorSleepTime = 2000;
 				    	}, error: function(response) {
-				        	console.log("ERROR:", response);
+				    		errorSleepTime *= 2;
+				    		console.log("errorSleepTime is: "+errorSleepTime);
+
+				    		setTimeout(function() {
+					        	long_polling();
+					        }, errorSleepTime);
 				        }
 				    });
 				};
-				poll();
+				long_polling();
 			});
 		</script>
 
