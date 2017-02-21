@@ -23,7 +23,7 @@ MongoDB Architecture:
 
 There are 5 collections:
 
-- users
+- <b>users</b>
 
   _id
 
@@ -38,7 +38,7 @@ There are 5 collections:
   last_seen
 
 
-- posts
+- <b>posts</b>
   
   _id
   
@@ -49,7 +49,7 @@ There are 5 collections:
   created_on
 
 
-- comments
+- <b>comments</b>
   
   _id
   
@@ -62,7 +62,7 @@ There are 5 collections:
   created_on
 
 
-- notifications
+- <b>notifications</b>
   
   _id
   
@@ -79,7 +79,7 @@ There are 5 collections:
   created_on
 
 
-- push_notifications
+- <b>push_notifications</b>
   
   _id
   
