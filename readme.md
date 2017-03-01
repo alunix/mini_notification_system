@@ -2,7 +2,11 @@ A mini notification system based on Codeigniter and MongoDB.
 
 Whenever a notification needs to be sent out, it is pushed to the client using Tornado.
 
-Implements persistent connection using long polling and Tornado.
+**Implements persistent connection using long polling and Tornado.**
+Hence, notifications get pushed instantly to user, if the user is online and connected.
+
+The Tornado implementation is here:
+https://github.com/harkirat1892/tornado_push_server
 
 
 Links:
